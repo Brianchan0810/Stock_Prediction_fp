@@ -23,7 +23,7 @@ timezone = pytz.timezone('UTC')
 print(timezone.localize(time(9,0,0)))
 
 
-stock_start_time = {'summer':, 'winter' }
+#stock_start_time = {'summer': '2021, 'winter' }
 
 tweets_list = []
 
@@ -32,6 +32,6 @@ for tweet in sntwitter.TwitterSearchScraper(f'$TSLA since:{today_date} until:{ne
         break
     tweets_list.append([tweet.date, tweet.id, tweet.content])
 
-tweets_df2 = pd.DataFrame(tweets_list2, columns=['Datetime', 'Tweet Id', 'Text'])
+tweets_df2 = pd.DataFrame(tweets_list, columns=['Datetime', 'Tweet Id', 'Text'])
 
 tweets_df2
