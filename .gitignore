@@ -3,3 +3,5 @@ ScrapeOldTweet2/.idea
 ScrapeOldTweet2/venv
 .idea
 venv
+gcs_key.json
+Data
