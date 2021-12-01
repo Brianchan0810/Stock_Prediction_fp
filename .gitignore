@@ -5,3 +5,5 @@ ScrapeOldTweet2/venv
 venv
 gcs_key.json
 Data
+AllHIsTweet.parquet
+HolidayTable.csv
