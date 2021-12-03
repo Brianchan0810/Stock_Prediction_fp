@@ -16,8 +16,9 @@ def Fillzero(string):
     if len(string) > 0:
         date = re.search(pattern, string).group(0)
         if len(date)==1:
-           return string.replace(f'{date}',f'0{date}')
-        else: return string
+            return string.replace(f'{date}',f'0{date}')
+        else:
+            return string
 
 URL = "https://www.nyse.com/markets/hours-calendars"
 page = requests.get(URL)

@@ -7,3 +7,5 @@ gcs_key.json
 Data
 AllHIsTweet.parquet
 HolidayTable.csv
+old
+*.csv

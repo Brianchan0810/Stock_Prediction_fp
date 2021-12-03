@@ -25,11 +25,9 @@ for file in os.listdir():
         dfs.append(df0)
 
 df = pd.concat(dfs)
-df
 df.reset_index(inplace=True,drop=True)
-df
 df.sort_values(by='Datetime',inplace=True)
-df
+
 os.chdir('..')
 
 df.to_parquet('AllHIsTweet.parquet')
