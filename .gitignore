@@ -5,3 +5,12 @@ ScrapeOldTweet2/venv
 venv
 gcs_key.json
 Data
+old
+sandbox
+*.png
+*.pbix
+*.csv
+*.sav
+PostMarketSent_Airflow - Copy.py
+powerbi.txt
+view_creation.sql
