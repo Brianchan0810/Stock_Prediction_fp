@@ -32,3 +32,10 @@ TSLA_news
 TSLA_tweet
 keywords.txt
 my_model.pkl
+sandbox
+*.png
+*.pbix
+*.sav
+PostMarketSent_Airflow - Copy.py
+powerbi.txt
+view_creation.sql

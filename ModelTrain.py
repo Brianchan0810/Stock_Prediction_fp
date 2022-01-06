@@ -5,73 +5,92 @@ from sklearn import svm
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import recall_score, precision_score
-from sklearn.model_selection import GridSearchCV
 import os
 import matplotlib.pyplot as plt
 import joblib
+import seaborn as sns
+from DataPreparation import df_to_db
 
 def split_by_date(df0, feature_list, label_column, test_size):
     df = df0.copy()
-
-    date_list = df['date'].sort_values().unique()
+    df['date'] = pd.to_datetime(df['date'])
+    df = df.sort_values(by=['stock_symbol', 'date'])
+    date_list = df['date'].unique()
     test_start_date = date_list[-round(len(date_list) * test_size)]
     train, test = df[df['date'] < test_start_date], df[df['date'] >= test_start_date]
+    return train[feature_list], test[feature_list], train[label_column], test[label_column], test_start_date
 
-    return train[feature_list], test[feature_list], train[label_column], test[label_column]
+# choices of features list
+list0 = ['last_ud', 'last_ud_rolling3d', 'be_compound_mean', 'be_compound_count', 'af_compound_mean',
+         'af_compound_count', 'news_compound_mean', 'news_compound_count', 'nd_last_ud', 'nd_last_ud_rolling3d']
 
-def model_evaluation(model, X_train, X_test, y_train, y_test):
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
+list1 = list0[2:]
 
-    return accuracy_score(y_test, y_pred), recall_score(y_test, y_pred), precision_score(y_test, y_pred)
+list2 = list0[:-2]
 
+list3 = ['last_ud_rolling3d', 'pm_ud', 'last_ud', 'nd_last_ud', 'nd_pm_ud', 'nd_last_ud_rolling3d']
 
-list0 = ['ud_rolling3d', 'pm_ud', 'last_ud', 'be_compound_mean', 'be_compound_count','af_compound_mean',
-         'af_compound_count', 'news_compound_mean', 'news_compound_count', 'nd_last_ud', 'nd_cur_pm_ud',
-         'nd_ud_rolling3d']
+#split the whole df into training and testing dataset
+entire = pd.read_csv('entire_ready.csv')
 
-list1 = ['ud_rolling3d', 'last_ud', 'be_compound_mean', 'be_compound_count', 'af_compound_mean',
-         'af_compound_count', 'news_compound_mean', 'news_compound_count', 'nd_last_ud', 'nd_ud_rolling3d',
-         'v_0', 'v_1', 'v_2', 'v_3', 'v_4', 'v_5', 'v_6', 'v_7', 'v_8', 'v_9']
+X_train, X_test, y_train, y_test, test_start_date = split_by_date(entire, list2, 'ud', 0.2)
 
-list2 = ['ud_rolling3d', 'last_ud', 'be_compound_mean', 'be_compound_count', 'af_compound_mean',
-         'af_compound_count', 'news_compound_mean', 'news_compound_count', 'nd_last_ud', 'nd_ud_rolling3d']
-
-list3 = ['ud_rolling3d', 'pm_ud', 'last_ud', 'nd_last_ud', 'nd_cur_pm_ud', 'nd_ud_rolling3d']
-
-df = pd.read_csv('ready3.csv')
-
-X_train, X_test, y_train, y_test = split_by_date(df, list2, 'ud', 0.3)
+# comparing performance among models
 
 lin_svm = svm.LinearSVC()
-rf = RandomForestClassifier(max_depth=4, random_state=0)
+rf = RandomForestClassifier(max_depth=4, random_state=42)
 knn = KNeighborsClassifier(n_neighbors=2)
 
-for model in [lin_svm, rf, knn]:
-    model_evaluation(model, X_train, X_test, y_train, y_test)
+model_dict = {'linear_svm': lin_svm, 'random_forest': rf, 'k_neighbors': knn}
 
-accuracy_list = []
-recall_list = []
-precision_list = []
-for i in range(2, 10):
-    rf = RandomForestClassifier(max_depth=i, random_state=42)
-    accuracy, recall, precision = model_evaluation(rf, X_train, X_test, y_train, y_test)
-    accuracy_list.append(accuracy)
-    recall_list.append(recall)
-    precision_list.append(precision)
+result = {}
+for name, model in model_dict.items():
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    result[name] = [accuracy_score(y_test, y_pred), recall_score(y_test, y_pred), precision_score(y_test, y_pred)]
 
-plt.plot(range(2, 10), accuracy_list, label='accuracy')
-plt.plot(range(2, 10), recall_list, label='recall')
-plt.plot(range(2, 10), precision_list, label='precision')
-plt.legend()
+result_df = pd.DataFrame(result, index=['accuracy', 'recall', 'precision'])
+result_df.reset_index(inplace=True)
+result_df = pd.melt(result_df, id_vars='index')
+sns.barplot(data=result_df, x='variable', y='value', hue='index')
 
-final_model = RandomForestClassifier(max_depth=4)
+
+# compare the performance of one model among different stock
+dfs = []
+stock_list = ['TSLA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN']
+for stock in stock_list:
+    df0 = pd.read_csv(f'.\\Data\\{stock}_analysis\\{stock}_ready.csv')
+    dfs.append(df0)
+
+model = svm.LinearSVC()
+model.fit(X_train, y_train)
+
+result = []
+for df in dfs:
+    df = df[pd.to_datetime(df['date']) > test_start_date]
+    y_pred = model.predict(df[list2])
+    result.append(accuracy_score(df['ud'], y_pred))
+plt.bar(stock_list, result)
+y_pred
+#save model
+
+filename = 'my_model.sav'
+final_model = svm.LinearSVC()
 final_model.fit(X_train, y_train)
-filename = 'my_model.pkl'
+final_model.feature_names = list(X_train.columns.values)
 joblib.dump(final_model, filename)
 
+# input the prediction to the database
 my_model = joblib.load('my_model.sav')
-model_evaluation(my_model, X_train, X_test, y_train, y_test)
+individual = pd.read_csv('.\\Data\\GOOGL_analysis\\GOOGL_ready.csv')
+individual = individual[pd.to_datetime(individual['date']) > test_start_date]
+individual['prediction'] = my_model.predict(individual[list2])
+df_to_db(individual[['date', 'prediction']], 'myfp', 'GOOGL_pred')
+
+
+
+
+
 
 
 
