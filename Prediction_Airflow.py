@@ -145,7 +145,7 @@ def pre_market_task(path, execution_date):
         final = pd.concat([be_t_gb2, af_t_gb2, news_gb2], axis=1)
         final = pd.merge(final, p, left_index=True, right_index=True)
 
-        my_model = joblib.load(path + 'my_model.sav')
+        my_model = joblib.load(path + '/my_model.sav')
         result = my_model.predict(final[['last_ud', 'last_ud_rolling3d', 'be_compound_mean', 'be_compound_count',
                                          'af_compound_mean', 'af_compound_count', 'news_compound_mean', 'news_compound_count']])
 

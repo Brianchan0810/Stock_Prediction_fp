@@ -67,7 +67,7 @@ def normalization(path, stock_symbol, mean_dict, df0_gb, prefix, threshold):
     if (df_gb[f'{prefix}_compound_count'] < threshold).values[0]:
         df_gb[f'{prefix}_compound_mean'] = mean_dict[prefix][f'{prefix}_compound_mean']
         df_gb[f'{prefix}_compound_count'] = mean_dict[prefix][f'{prefix}_compound_count']
-    scaler = joblib.load(path + f'{stock_symbol}_{prefix}_scaler.sav')
+    scaler = joblib.load(path + f'/{stock_symbol}_{prefix}_scaler.sav')
     df_gb[[f'{prefix}_compound_count', f'{prefix}_compound_mean']] \
         = scaler.transform(df_gb[[f'{prefix}_compound_count', f'{prefix}_compound_mean']])
     return df_gb

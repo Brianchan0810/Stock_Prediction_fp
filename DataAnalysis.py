@@ -116,12 +116,13 @@ be_t = sentiment_analysis(be_t, 'cleaned', 0.2, extra_dict_for_tweet)
 af_t = sentiment_analysis(af_t, 'cleaned', 0.2, extra_dict_for_tweet)
 n = sentiment_analysis(n, 'content', 0.2)
 
-be_t_gb = aggregation(be_t, 'be', 0.2, sent_to_db=True, table_name=f'{stock_symbol}_be_sent')
-af_t_gb = aggregation(af_t, 'af', 0.2, sent_to_db=True, table_name=f'{stock_symbol}_af_sent')
-news_gb = aggregation(n, 'news', 0.2, sent_to_db=True, table_name=f'{stock_symbol}_news_sent')
+be_t_gb = aggregation(be_t, 'be', 0.2, sent_to_db=False, table_name=f'{stock_symbol}_be_sent')
+af_t_gb = aggregation(af_t, 'af', 0.2, sent_to_db=False, table_name=f'{stock_symbol}_af_sent')
+news_gb = aggregation(n, 'news', 0.2, sent_to_db=False, table_name=f'{stock_symbol}_news_sent')
 
-be_t_gb[['be_compound_mean', 'be_compound_count']].mean()
-af_t_gb[['af_compound_mean', 'af_compound_count']].mean()
+be_t_gb[['be_compound_mean', 'be_compound_count']].quantile(.95)
+af_t_gb[['af_compound_mean', 'af_compound_count']].describe()
+af_t_gb.shape
 news_gb[['news_compound_mean', 'news_compound_count']].mean()
 
 be_t_gb2 = data_normalization(be_t_gb, 10, 'be', f'{stock_symbol}_be_scaler.sav')
