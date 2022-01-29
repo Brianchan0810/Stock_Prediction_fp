@@ -120,11 +120,6 @@ be_t_gb = aggregation(be_t, 'be', 0.2, sent_to_db=False, table_name=f'{stock_sym
 af_t_gb = aggregation(af_t, 'af', 0.2, sent_to_db=False, table_name=f'{stock_symbol}_af_sent')
 news_gb = aggregation(n, 'news', 0.2, sent_to_db=False, table_name=f'{stock_symbol}_news_sent')
 
-be_t_gb[['be_compound_mean', 'be_compound_count']].quantile(.95)
-af_t_gb[['af_compound_mean', 'af_compound_count']].describe()
-af_t_gb.shape
-news_gb[['news_compound_mean', 'news_compound_count']].mean()
-
 be_t_gb2 = data_normalization(be_t_gb, 10, 'be', f'{stock_symbol}_be_scaler.sav')
 af_t_gb2 = data_normalization(af_t_gb, 10, 'af', f'{stock_symbol}_af_scaler.sav')
 news_gb2 = data_normalization(news_gb, 5, 'news', f'{stock_symbol}_news_scaler.sav')
@@ -165,27 +160,3 @@ for stock in list_of_stock:
    dfs.append(df)
 entire = pd.concat(dfs, axis=0)
 entire.to_csv('entire_ready.csv')
-
-
-
-list_of_cleaned_t = []
-list_of_n = []
-list_of_p = []
-
-for stock_symbol in list_of_stock:
-    os.chdir(f'.\\Data\\{stock_symbol}_analysis')
-    list_of_cleaned_t.append(pd.read_parquet(f'processed_{stock_symbol}_t.parquet'))
-    list_of_n.append(pd.read_parquet(f'processed_{stock_symbol}_news.parquet'))
-    list_of_p.append(pd.read_parquet(f'processed_{stock_symbol}_price.parquet'))
-    os.chdir(f'..\\..')
-
-
-# Doc2Vec
-# headline_gb = n.groupby(['stock_symbol', 'date'])[['tokenized', 'headline']].agg(
-#     {'tokenized': 'sum', 'headline': lambda x: ' '.join(x)}).reset_index()
-# documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(headline_gb['headline'])]
-# model = Doc2Vec(documents, vector_size=10, window=2, min_count=1, workers=4)
-# vector = pd.DataFrame([list(model.infer_vector(row)) for row in headline_gb['tokenized']])
-# vector = vector.add_prefix('v_')
-# headline_gb = pd.concat([headline_gb, vector], axis=1)
-# news_gb3 = pd.merge(news_gb2, headline_gb, how='left', on=['stock_symbol', 'date'])
