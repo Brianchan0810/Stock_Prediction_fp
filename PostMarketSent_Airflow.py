@@ -32,6 +32,7 @@ def post_market_task(path, execution_date):
 
     today_date = datetime.now().date()
     print(today_date)
+    print(today_date.weekday())
     print(execution_date)
 
     if today_date not in holiday_list and today_date.weekday() < 5:
@@ -97,7 +98,7 @@ def post_market_task(path, execution_date):
         print(af_t.shape)
         af_t = sentiment_analysis(af_t, 'cleaned', 0.2, extra_dict_for_tweet)
 
-        af_t_gb = aggregation(af_t, 'af', 0.2, f'{stock_symbol}_af_sent')
+        af_t_gb = aggregation(af_t, 'af', 0.2, 'myfp', f'{stock_symbol}_af_sent')
 
         # input last day price movement
         next_date = today_date + timedelta(days=1)
@@ -108,16 +109,22 @@ def post_market_task(path, execution_date):
             p = yf.download(tickers=f'{stock_symbol}', start=next_date, end=next_date, interval='1d')
         p = p.reset_index()[['Date', 'Open', 'Close']]
         p.columns = ['date', 'open', 'close']
-        df_to_db(p, 'sandbox', f'{stock_symbol}_price')
+        print(p)
+        df_to_db(p, 'myfp', f'{stock_symbol}_price')
+
+        print('finished whole task')
+
+    else:
+        print("doesn't do anything")
 
 
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'email': ['airflow@example.com'],
-    'email_on_failure': False,
+    'email': ['cxb2000abc@gmail.com'],
+    'email_on_failure': True,
     'email_on_retry': False,
-    'retries': 1,
+    'retries': 3,
     'retry_delay': timedelta(minutes=5),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
@@ -137,7 +144,7 @@ with DAG(
         'PostMarketTask_test',
         default_args=default_args,
         description='get tweet and stock price on that day',
-        start_date=datetime(2022, 1, 1),
+        start_date=datetime(2022, 1, 13),
         schedule_interval='20 20 * * *',
         catchup=False
 

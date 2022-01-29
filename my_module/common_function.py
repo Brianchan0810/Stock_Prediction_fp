@@ -50,17 +50,23 @@ def get_value_from_db_column(database_name, table_name, column_name,how):
         mycursor.execute(f"SELECT min({column_name}) FROM {table_name}")
     return mycursor.fetchone()[0]
 
-def aggregation(df0, prefix , threshold, table_name):
+def aggregation(df0, prefix , threshold, db_name, table_name):
+    from datetime import datetime
     df = df0
     df = df[~((df['compound'] < threshold) & (df['compound'] > -threshold))]
     df_gb = df.groupby('date').agg({'compound': ['mean', 'count'], 'positive': 'sum'})
     df_gb.columns = ['_'.join(col) for col in df_gb.columns.values]
     df_gb.reset_index(inplace=True)
-    df_to_db(df_gb, 'sandbox', table_name)
+    db_most_update_date = get_value_from_db_column(db_name, table_name, 'date', 'max')
+    print(db_most_update_date)
+    if db_most_update_date != datetime.now().date():
+        df_to_db(df_gb, db_name, table_name)
+        print('added to db')
     df_gb = df_gb.add_prefix(f'{prefix}_')
     return df_gb
 
 def normalization(path, stock_symbol, mean_dict, df0_gb, prefix, threshold):
+    from sklearn.preprocessing import MinMaxScaler
     import joblib
 
     df_gb = df0_gb.copy()

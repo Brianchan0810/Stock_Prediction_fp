@@ -18,6 +18,7 @@ def pre_market_task(path, execution_date):
     import pandas as pd
     import nltk
     import joblib
+    from sklearn import svm
     from my_module.common_function import get_recent_tweet, sentiment_analysis, aggregation, df_to_db, normalization
 
     sql_engine = create_engine(f'mysql+pymysql://user:user@18.216.168.246', pool_recycle=3600)
@@ -32,7 +33,8 @@ def pre_market_task(path, execution_date):
     db_connection.close()
 
     today_date = datetime.now().date()
-    print(today_date)
+    print("today_date: " + datetime.strftime(today_date, '%Y-%m-%d'))
+    print(today_date.weekday())
     print(execution_date)
 
     if today_date not in holiday_list and today_date.weekday() < 5:
@@ -119,8 +121,8 @@ def pre_market_task(path, execution_date):
         be_t = sentiment_analysis(be_t, 'cleaned', 0.2, extra_dict_for_tweet)
         n = sentiment_analysis(n, 'content', 0.2)
 
-        be_t_gb = aggregation(be_t, 'be', 0.2, f'{stock_symbol}_be_sent')
-        news_gb = aggregation(n, 'news', 0.2, f'{stock_symbol}_news_sent')
+        be_t_gb = aggregation(be_t, 'be', 0.2, 'myfp', f'{stock_symbol}_be_sent')
+        news_gb = aggregation(n, 'news', 0.2, 'myfp', f'{stock_symbol}_news_sent')
 
         sql_engine = create_engine('mysql+pymysql://user:user@18.216.168.246', pool_recycle=3600)
         db_connection = sql_engine.connect()
@@ -150,16 +152,21 @@ def pre_market_task(path, execution_date):
                                          'af_compound_mean', 'af_compound_count', 'news_compound_mean', 'news_compound_count']])
 
         result_df = pd.DataFrame({'date': today_date, 'prediction': result})
-        df_to_db(result_df, 'sandbox', f'{stock_symbol}_pred')
+        df_to_db(result_df, 'myfp', f'{stock_symbol}_pred')
+
+        print('finished whole task')
+
+    else:
+        print("doesn't do anything")
 
 
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'email': ['airflow@example.com'],
-    'email_on_failure': False,
+    'email': ['cxb2000abc@gmail.com'],
+    'email_on_failure': True,
     'email_on_retry': False,
-    'retries': 1,
+    'retries': 3,
     'retry_delay': timedelta(minutes=5),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
@@ -179,7 +186,7 @@ with DAG(
         'Prediction_test',
         default_args=default_args,
         description='predict the movement on that day',
-        start_date=datetime(2022, 1, 1),
+        start_date=datetime(2022, 1, 13),
         schedule_interval='20 11 * * *',
         catchup=False
 
@@ -197,7 +204,8 @@ with DAG(
             "yfinance",
             "mysql-connector-python",
             "finnhub-python",
-            "pymysql"
+            "pymysql",
+            "scikit-learn"
         ],
         op_kwargs={"execution_date": "{{ds}}", "path": path},
         system_site_packages=False,

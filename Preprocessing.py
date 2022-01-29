@@ -12,13 +12,6 @@ from sqlalchemy import create_engine
 # collect 2hr tweets before market start and collect 3hr tweets after market end
 be_start_hr, af_start_hr = 12, 21
 
-def get_sunday_date(date, month, nth_week):
-    year = date.year
-    c = calendar.Calendar(firstweekday=calendar.SUNDAY)
-    my_calendar = c.monthdatescalendar(year, month)
-    return [day for week in my_calendar for day in week if day.weekday() == calendar.SUNDAY and day.month == month][
-        nth_week - 1]
-
 def datetime_processing(df0, holiday_list, datetime_column, fil_by_date=False):
     df = df0.copy()
     df['year'] = df[f'{datetime_column}'].dt.year
@@ -113,6 +106,3 @@ pd.merge(n[['date', 'summary', 'headline', 'content', 'tokenized']],
     f'processed_{stock_symbol}_news.parquet', index=False)
 
 os.chdir('..\\..')
-
-datetime.today().date() + timedelta(days=1)
-datetime.strftime(datetime.today().date(),'%Y-%m-%d')
