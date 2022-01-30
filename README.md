@@ -10,7 +10,7 @@ Moreover, in order to expand the dataset, 5 stocks from Nasdaq-100 are picked wh
 
 This project is divided into several parts:
 
-1. **Data Collection ~ HisData_airflow**
+1. **Data Collection ~ HisData_airflow.py**
     - Collect past 1 year tweets and news data
     - Data backfilling using Apache Airflow
     - A parquet file of each day would be sent to Cloud Storage.
